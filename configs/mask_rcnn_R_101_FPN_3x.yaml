@@ -1,0 +1,26 @@
+_BASE_: "./Base-RCNN-FPN.yaml"
+MODEL:
+  WEIGHTS: "../model/detection_model.pth"  # "/home/jayeon/Documents/detectron2/tools/output/model_final.pth"
+  MASK_ON: True
+  ROI_HEADS:
+    BATCH_SIZE_PER_IMAGE: 128
+    NUM_CLASSES: 13
+  SIM_ON: False
+  RESNETS:
+    DEPTH: 101
+DATASETS:
+  TRAIN: ("deepfashion2_train",)
+  TEST: ("deepfashion2_val",)
+DATALOADER:
+  NUM_WORKERS: 2
+  SAMPLER_TRAIN: "InferenceSampler"
+  ASPECT_RATIO_GROUPING: True
+  TRIPLET_GROUPING: False
+  SHUFFLE: False
+SOLVER:
+  STEPS: (210000, 250000)
+  MAX_ITER: 270000
+  IMS_PER_BATCH: 16
+TEST:
+  AUG:
+    FLIP: True
