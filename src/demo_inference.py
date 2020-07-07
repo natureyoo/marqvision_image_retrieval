@@ -3,7 +3,7 @@ from detectron2.modeling import build_model
 from detectron2.checkpoint import DetectionCheckpointer
 
 from networks import ResNetbasedNet
-from datasets import GalleryDataset
+from datasets import GalleryDataset, trivial_batch_collator
 
 import argparse
 import cv2
@@ -42,7 +42,7 @@ def main(args):
     cfg.merge_from_file("/home/jayeon/Documents/detectron2/configs/DeepFashion2-Demo/mask_rcnn_R_101_FPN_3x.yaml")
 
     batch_size = cfg.SOLVER.IMS_PER_BATCH
-    params = {'batch_size': batch_size, 'shuffle': False, 'num_workers': 8}
+    params = {'batch_size': batch_size, 'shuffle': False, 'num_workers': 8, 'collate_fn': trivial_batch_collator}
 
     query_path = args.query_path
     gallery_dir = args.gallery_dir

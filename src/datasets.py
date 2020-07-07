@@ -5,7 +5,6 @@ import os
 
 import torch
 from torch.utils.data import Dataset
-from torch.utils.data.sampler import Sampler
 from torch.utils.data.sampler import BatchSampler
 from torchvision import transforms, utils
 import torchvision.transforms.functional as tf
@@ -324,8 +323,8 @@ class GalleryDataset(torch.utils.data.Dataset):
     def __init__(self, gallery_dir):
         support_img_fmt = ['jpeg', 'jpg', 'jpe', 'png']
         self.list_ids = [file for file in os.listdir(gallery_dir) if file.split('.')[1] in support_img_fmt]
-        self.list_imgs = [cv2.imread(os.path.join(gallery_dir, file)) for file in self.list_ids]
-        self.list_size = [(img.shape[0], img.shape[1]) for img in self.list_imgs]
+        self.list_imgs = [torch.from_numpy(cv2.imread(os.path.join(gallery_dir, file))).permute(2, 0, 1) for file in self.list_ids]
+        self.list_size = [(img.shape[1], img.shape[2]) for img in self.list_imgs]
 
     def __len__(self):
         return len(self.list_ids)
@@ -333,3 +332,10 @@ class GalleryDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         data = {'image': self.list_imgs[index], 'height': self.list_size[index][0], 'width': self.list_size[index][1]}
         return data
+
+
+def trivial_batch_collator(batch):
+    """
+    A batch collator that does nothing.
+    """
+    return batch
