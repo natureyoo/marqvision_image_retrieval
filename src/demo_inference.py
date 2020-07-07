@@ -39,7 +39,7 @@ def get_query_img(img_path):
 
 def main(args):
     cfg = get_cfg()
-    cfg.merge_from_file("/home/jayeon/Documents/detectron2/configs/DeepFashion2-Demo/mask_rcnn_R_101_FPN_3x.yaml")
+    cfg.merge_from_file("./configs/mask_rcnn_R_101_FPN_3x.yaml")
 
     batch_size = cfg.SOLVER.IMS_PER_BATCH
     params = {'batch_size': batch_size, 'shuffle': False, 'num_workers': 8, 'collate_fn': trivial_batch_collator}
