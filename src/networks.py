@@ -7,7 +7,7 @@ import fvcore.nn.weight_init as weight_init
 
 
 class ResNetbasedNet(nn.Module):
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, depth=101, vec_dim=128, max_pool=False):
         super(ResNetbasedNet, self).__init__()
         if cfg is not None:
             model = build_resnet_backbone(cfg, ShapeSpec(channels=len(cfg.MODEL.PIXEL_MEAN)))
@@ -22,12 +22,27 @@ class ResNetbasedNet(nn.Module):
             model.load_state_dict(mapped_dict)
             self.backbone = nn.Sequential(*list(model.children()))
         else:
-            model = torch.hub.load('pytorch/vision:v0.6.0', 'resnet101', pretrained=True)
+            model = torch.hub.load('pytorch/vision:v0.6.0', 'resnet{}'.format(depth), pretrained=True)
             self.backbone = nn.Sequential(*list(model.children())[:-2])
 
-        self.max_pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(2048, 128)
+        self.max_pool = nn.AdaptiveMaxPool2d((1, 1)) if max_pool else nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(2048, vec_dim)
         weight_init.c2_xavier_fill(self.fc)
+
+    def forward(self, x):
+        x = self.backbone(x)
+        x = self.max_pool(x)
+        x = x.view(x.size()[0], -1)
+        x = self.fc(x)
+        return x
+
+
+class ResNet50basedNet(nn.Module):
+    def __init__(self, backbone_model):
+        super(ResNet50basedNet, self).__init__()
+        self.backbone = nn.Sequential(*list(backbone_model.children())[:-2])    # conv layer of ResNet50
+        self.max_pool = nn.AdaptiveMaxPool2d((1,1))
+        self.fc = nn.Linear(2048, 256)
 
     def forward(self, x):
         x = self.backbone(x)
@@ -44,8 +59,6 @@ class ResNet50basedMultiNet(nn.Module):
     def forward(self, x):
         x = self.fc(x)
         return x
-
-
 
 
 class EmbeddingNet(nn.Module):
