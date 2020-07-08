@@ -322,15 +322,15 @@ class DeepFashionDataset(torch.utils.data.Dataset):
 class GalleryDataset(torch.utils.data.Dataset):
     def __init__(self, gallery_dir):
         support_img_fmt = ['jpeg', 'jpg', 'jpe', 'png']
+        self.dir = gallery_dir
         self.list_ids = [file for file in os.listdir(gallery_dir) if file.split('.')[1] in support_img_fmt]
-        self.list_imgs = [torch.from_numpy(cv2.imread(os.path.join(gallery_dir, file))).permute(2, 0, 1) for file in self.list_ids]
-        self.list_size = [(img.shape[1], img.shape[2]) for img in self.list_imgs]
 
     def __len__(self):
         return len(self.list_ids)
 
     def __getitem__(self, index):
-        data = {'image': self.list_imgs[index], 'height': self.list_size[index][0], 'width': self.list_size[index][1]}
+        img_tensor = torch.from_numpy(cv2.imread(os.path.join(self.dir, self.list_ids[index]))) #.premute(2,0,1)
+        data = {'image': img_tensor.permute(2, 0, 1), 'height': img_tensor.shape[1], 'width': img_tensor.shape[2]}
         return data
 
 

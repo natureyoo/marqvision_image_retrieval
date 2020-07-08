@@ -64,11 +64,11 @@ def calculate_distance(query_vec, gallery_vecs, top_k=100):
 
 def main(args):
     cfg = get_cfg()
-    cfg.merge_from_file("/home/jayeon/Documents/detectron2/configs/DeepFashion2-Demo/mask_rcnn_R_101_FPN_3x.yaml")
+    cfg.merge_from_file(os.path.join('/'.join(os.path.realpath(__file__).split('/')[:-2]), "configs/mask_rcnn_R_101_FPN_3x.yaml"))
 
-    batch_size = cfg.SOLVER.IMS_PER_BATCH
+    cfg.SOLVER.IMS_PER_BATCH = int(args.batch_size)
     vec_dim = 128
-    params = {'batch_size': batch_size, 'shuffle': False, 'num_workers': 8, 'collate_fn': trivial_batch_collator}
+    params = {'batch_size': int(args.batch_size), 'shuffle': False, 'num_workers': 8, 'collate_fn': trivial_batch_collator}
 
     query_path = args.query_path
     gallery_dir = args.gallery_dir
@@ -77,16 +77,15 @@ def main(args):
     top_k = args.top_k
 
     # Load gallery dataset
-    # dataset = GalleryDataset(gallery_dir)
-    # data_loader = torch.utils.data.DataLoader(dataset, **params)
-    register_coco_instances("deepfashion2_val", {}, "/home/ubuntu/DeepFashion2/coco_format/instance_val.json", "/home/ubuntu/DeepFashion2/validation/image/")
-    data_loader = build_detection_test_loader(cfg, 'deepfashion2_val')
-    need_resize = True #False
+    dataset = GalleryDataset(gallery_dir)
+    data_loader = torch.utils.data.DataLoader(dataset, **params)
+    print('Gallery dataset is loaded!')
+    need_resize = False
 
     # Load Detection model
     detection_model = build_model(cfg)
     checkpointer = DetectionCheckpointer(detection_model)
-    checkpointer.load(cfg.MODEL.WEIGHTS)
+    checkpointer.load(args.detection_model_file)
 
     # Load Sim model
     sim_model = ResNetbasedNet(cfg=cfg, vec_dim=vec_dim)
@@ -139,8 +138,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='image retrieval system')
     parser.add_argument('-db', dest='gallery_dir', required=False, help='Directory of Gallery Images')
     parser.add_argument('-q', dest='query_path', required=True, help='File Path of Query Image')
+    parser.add_argument('-b', dest='batch_size', required=False, default=8, help='Batch Size, if the memori is lack, reduce the batch size')
     parser.add_argument('-k', dest='top_k', required=False, default=100, help='Has GT Bounding Box or Not')
-    parser.add_argument('-sm', dest='sim_model_file', required=False, help='Similarity Compairing Model File')
+    parser.add_argument('-dm', dest='detection_model_file', required=True, help='Detection Model File')
+    parser.add_argument('-sm', dest='sim_model_file', required=True, help='Similarity Compairing Model File')
     parser.add_argument('-r', dest='result_dir', required=True, help='Directory to save the results')
     parser.add_argument('-c', dest='is_precomputed', required=False, default=False, help='Precomputed vectors exist or not')
 

@@ -7,19 +7,10 @@ import fvcore.nn.weight_init as weight_init
 
 
 class ResNetbasedNet(nn.Module):
-    def __init__(self, cfg=None, depth=101, vec_dim=128, max_pool=False):
+    def __init__(self, cfg=None, model_path=None, depth=101, vec_dim=128, max_pool=False):
         super(ResNetbasedNet, self).__init__()
         if cfg is not None:
             model = build_resnet_backbone(cfg, ShapeSpec(channels=len(cfg.MODEL.PIXEL_MEAN)))
-            pretrained_model = torch.load(cfg.MODEL.WEIGHTS)
-            cur_state = model.state_dict()
-            mapped_dict = {}
-            for name, param in pretrained_model.items():
-                if name == 'model':
-                    for p in param:
-                        if p.replace('backbone.bottom_up.', '') in cur_state:
-                            mapped_dict[p.replace('backbone.bottom_up.', '')] = param[p]
-            model.load_state_dict(mapped_dict)
             self.backbone = nn.Sequential(*list(model.children()))
         else:
             model = torch.hub.load('pytorch/vision:v0.6.0', 'resnet{}'.format(depth), pretrained=True)
@@ -28,6 +19,8 @@ class ResNetbasedNet(nn.Module):
         self.max_pool = nn.AdaptiveMaxPool2d((1, 1)) if max_pool else nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(2048, vec_dim)
         weight_init.c2_xavier_fill(self.fc)
+        if model_path is not None:
+            model.load_state_dict(torch.load(model_path))
 
     def forward(self, x):
         x = self.backbone(x)
