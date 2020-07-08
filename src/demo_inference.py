@@ -38,9 +38,9 @@ def get_query_img(img_path):
     return [query]
 
 
-def get_embed_vec(data_loader, detection_model, sim_model, vec_dim=128, need_resize=False):
+def get_embed_vec(data_loader, detection_model, sim_model, data_num, vec_dim=128, need_resize=False):
     start_time = time.time()
-    embedding_vecs = torch.zeros((len(data_loader), vec_dim))
+    embedding_vecs = torch.zeros((data_num, vec_dim))
     idx_ = 0
     for idx, batched_inputs in enumerate(data_loader):
         bboxes = detection_model.module.make_proposal(batched_inputs, False, need_resize)
@@ -114,8 +114,8 @@ def main(args):
             gallery_vecs = np.load(os.path.join(gallery_dir, 'vecs.npy'))
             gallery_list = [f.strip() for f in open(os.path.join(gallery_dir, 'vecs_idx.txt'), 'r').readlines()]
         else:
-            gallery_vecs = get_embed_vec(data_loader, detection_model, sim_model, vec_dim=vec_dim, need_resize=need_resize)
             gallery_list = dataset.list_ids
+            gallery_vecs = get_embed_vec(data_loader, detection_model, sim_model, len(gallery_list), vec_dim=vec_dim, need_resize=need_resize)
             print('Converting the gallery images into the vectors is finished!')
 
             np.save(os.path.join(gallery_dir, 'vecs.npy'), gallery_vecs)
