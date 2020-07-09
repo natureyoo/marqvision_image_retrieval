@@ -40,6 +40,10 @@ python src/demo_inference.py -db {gallery directory path} -q {query image path} 
 ex. python src/demo_inference.py -db '/DeepFashion2/validation/image' -q '/DeepFashion2/validation/image/000001.jpg' -dm 'home/{user}/model/detection_model.pth' -sm 'home/{user}/model/sim_model.pth' -b 16 -r './result'
 
 #### Case2: Loading the precomputed vectors of gallery images and calculating the similarity with the query image
+For about 32,000 gallery images and 1 query image, it takes about 33min with 4 RTX2080ti gpus. 
+
+If we pool only 5000 images and use them as gallery images, it will take about 6min.
+
 
 ex. python src/demo_inference.py -db '/DeepFashion2/validation/image' -q '/DeepFashion2/validation/image/000001.jpg' -dm 'home/{user}/model/detection_model.pth' -sm 'home/{user}/model/sim_model.pth' -b 16 -r './result' -c True
 
