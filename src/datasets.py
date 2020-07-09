@@ -320,18 +320,28 @@ class DeepFashionDataset(torch.utils.data.Dataset):
 
 
 class GalleryDataset(torch.utils.data.Dataset):
-    def __init__(self, gallery_dir):
-        support_img_fmt = ['jpeg', 'jpg', 'jpe', 'png']
-        self.dir = gallery_dir
-        self.list_ids = [file for file in os.listdir(gallery_dir) if file.split('.')[1] in support_img_fmt]
+    def __init__(self, image_list=None, gallery_dir=None, image_ids=None,  task='detection'):
+        self.task_type = task
+        if self.task_type == 'detection':
+            support_img_fmt = ['jpeg', 'jpg', 'jpe', 'png']
+            self.dir = gallery_dir
+            self.list_ids = [file for file in os.listdir(gallery_dir) if file.split('.')[1] in support_img_fmt]
+        elif self.task_type == 'similarity':
+            self.image_set = image_list
+            self.list_ids = image_ids
+        else:
+            print('choose the task type as between \'detection\' and \'similarity\'!')
 
     def __len__(self):
         return len(self.list_ids)
 
     def __getitem__(self, index):
-        img_tensor = torch.from_numpy(cv2.imread(os.path.join(self.dir, self.list_ids[index]))) #.premute(2,0,1)
-        data = {'image': img_tensor.permute(2, 0, 1), 'height': img_tensor.shape[1], 'width': img_tensor.shape[2]}
-        return data
+        if self.task_type == 'detection':
+            img_tensor = torch.from_numpy(cv2.imread(os.path.join(self.dir, self.list_ids[index]))) #.premute(2,0,1)
+            data = {'idx': index, 'image': img_tensor.permute(2, 0, 1), 'height': img_tensor.shape[1], 'width': img_tensor.shape[2]}
+            return data
+        else:
+            return torch.from_numpy(self.image_set[index])
 
 
 def trivial_batch_collator(batch):
